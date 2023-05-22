@@ -1,0 +1,205 @@
+#!/usr/bin/env node
+const { messagesController } = require('../controlles/messagesController');
+
+/**
+ * Module dependencies.
+ */
+const mongoose = require("mongoose");
+var app = require('../app');
+var debug = require('debug')('mongoo:server');
+const https = require("https");
+const http = require("http");
+const express = require("express");
+const fs = require("fs");
+const url = require('url');
+const cors = require('cors');
+
+const privateKey = fs.readFileSync('/etc/letsencrypt/live/jamal-ib.com/privkey.pem', 'utf8');
+const certificate = fs.readFileSync('/etc/letsencrypt/live/jamal-ib.com/cert.pem', 'utf8');
+const ca = fs.readFileSync('/etc/letsencrypt/live/jamal-ib.com/chain.pem', 'utf8');
+
+const credentials = {
+    key: privateKey,
+    cert: certificate,
+    ca: ca
+};
+app.use(cors());
+/**
+ * Get port from environment and store in Express.
+ */
+var port = normalizePort(process.env.PORT || '3053');
+app.set('port', port);
+
+/**
+ * Create HTTP server.
+ */
+// const server = http.createServer(app);
+const server = https.createServer(credentials, app);
+
+// set up a route to redirect http to https
+// express.get('*', function(req, res) {  
+// res.redirect('https://' + req.headers.host + req.url);
+
+// Or, if you don't want to automatically detect the domain name from the request header, you can hard code it:
+// res.redirect('https://example.com' + req.url);
+// })
+
+// have it listen on 8080
+// http.listen(8080);
+
+const server80 = http.createServer((request, response) => {
+    let pathName = url.parse(req.url).pathname;
+    response.writeHead(301, { location: 'https://jamal-ib.com:3053' + pathName })
+});
+
+// const sessionMap = '';
+/**
+ * Listen on provided port, on all network interfaces.
+ */
+//connect DB
+mongoose.connect('mongodb://localhost:27017/test', {
+    useUnifiedTopology: true,
+    useNewUrlParser: true,
+    useCreateIndex: true,
+    useFindAndModify: false
+})
+    .then(() => {
+        const io = require("socket.io")(server, {
+            cors: {
+                origin: ["https://jamal-ib.com:3053",'http://localhost:4200'],
+                // origin: 'localhost:4200',
+                methods: ["GET", "POST"]
+            }
+        });
+        let users = [];
+        io.on("connection", (socket) => {
+            console.log('this user Connected', socket.id);
+
+            socket.on('userConnected', (user) => {
+                console.log('userConnected: ',user)
+                let connecteduser = { user: user, id: socket.id };
+                users.push(connecteduser);
+                console.log('users: ',users);
+                // socket.emit('onlineusers', users);
+                socket.broadcast.emit('onlineusers', users);
+            });
+
+            socket.on("sendPrivateMessage", (message) => {
+                // console.log('Message: ',message.to.id);
+                let mm = {
+                    message:message.message,
+                    from: message.from,
+                }
+                let pm = {
+                    from:message.from,
+                    to:message.to.user,
+                    message:message.message,
+                    time:message.time
+                }
+                messagesController.newPrivateMessage(pm);
+                // let message2Send = JSON.stringify({ user: socket.id, message: mess })
+                socket.to(message.to.id).emit("getPrivateMessage", mm);
+                // socket.emit("getPrivateMessage", mm);
+            });
+
+            socket.on("message", (message) => {
+                console.log('message from: ', socket.id, message);
+                messagesController.newMessage(message);
+                let message2Send = JSON.stringify({ user: socket.id, message: message })
+                // socket.emit("getMessage", message2Send);
+                socket.broadcast.emit("getMessage", message2Send);
+            });
+
+            socket.on('disconnecteduser', () => {
+                // console.log('users1: ', users);
+                users.splice(users.findIndex(elem => elem.id === socket.id), 1);
+                socket.broadcast.emit('onlineusers', users);
+                console.log('userDisconnect: ', socket.id);
+            })
+            socket.on("disconnect", () => {
+                console.log('this user Disconnected', socket.id);
+                // let boo = users.some(function(user) {
+                //     return user.id === socket.id;
+                // });
+                // console.log('boo: ',boo);
+                // if(boo === true) {
+                //     console.log(true);
+                // } else {
+                //     console.log(false);
+                // }
+            });
+        });
+
+        /**
+         * Listen on provided port, on all network interfaces.
+         */
+        server.listen(port);
+        server80.listen(3023);
+        server.on('error', onError);
+        server.on('listening', onListening);
+    })
+    .catch(err => {
+        console.log("DB connection Error", err.message);
+    });
+
+
+/**
+ * Normalize a port into a number, string, or false.
+ */
+
+function normalizePort(val) {
+    var port = parseInt(val, 10);
+
+    if (isNaN(port)) {
+        // named pipe
+        return val;
+    }
+
+    if (port >= 0) {
+        // port number
+        return port;
+    }
+
+    return false;
+}
+
+/**
+ * Event listener for HTTP server "error" event.
+ */
+
+function onError(error) {
+    if (error.syscall !== 'listen') {
+        throw error;
+    }
+
+    var bind = typeof port === 'string' ?
+        'Pipe ' + port :
+        'Port ' + port;
+
+    // handle specific listen errors with friendly messages
+    switch (error.code) {
+        case 'EACCES':
+            console.error(bind + ' requires elevated privileges');
+            process.exit(1);
+            break;
+        case 'EADDRINUSE':
+            console.error(bind + ' is already in use');
+            process.exit(1);
+            break;
+        default:
+            throw error;
+    }
+}
+
+/**
+ * Event listener for HTTP server "listening" event.
+ */
+
+function onListening() {
+    var addr = server.address();
+    var bind = typeof addr === 'string' ?
+        'pipe ' + addr :
+        'port ' + addr.port;
+    debug('Listening on ' + bind);
+}
+

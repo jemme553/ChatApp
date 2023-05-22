@@ -1,0 +1,134 @@
+#!/usr/bin/env node
+
+/**
+ * Module dependencies.
+ */
+ const { messagesController } = require('../controllers/messagescontroller');
+const mongoose = require("mongoose");
+const app = require('../app');
+const debug = require('debug')('node-project:server');
+const http = require('http');
+
+const https = require('https');
+const path = require("path");
+const fs = require("fs");
+const url = require("url");
+
+const privateKey = fs.readFileSync('/etc/letsencrypt/live/jamal-ib.com/privkey.pem', 'utf8');
+const certificate = fs.readFileSync('/etc/letsencrypt/live/jamal-ib.com/cert.pem', 'utf8');
+const ca = fs.readFileSync('/etc/letsencrypt/live/jamal-ib.com/chain.pem', 'utf8');
+
+const credentials = {
+  key: privateKey,
+  cert: certificate,
+  ca: ca
+};
+/**
+ * Get port from environment and store in Express.
+ */
+
+var port = normalizePort(process.env.PORT || '3018');
+app.set('port', port);
+
+/**
+ * Create HTTPS server.
+ */
+const server = https.createServer(credentials, app);
+/**
+ * Create HTTP server.
+ */
+const server80 = http.createServer((req, res) => {
+  let pathname = url.parse(req.url).pathname;
+  res.writeHead(301, { Location: 'https://jamal-ib.com:3018' + pathname });
+});
+
+//connect DB
+mongoose.connect('mongodb://localhost:27017/myusers', {
+  useUnifiedTopology: true,
+  useNewUrlParser: true,
+  useCreateIndex: true,
+  useFindAndModify: false,
+})
+  .then(() => {
+    /**
+     * Listen on provided port, on all network interfaces.
+     */
+    server.listen(port);
+    server80.listen(3016);
+    server.on('error', onError);
+    server.on('listening', onListening);
+  })
+  .catch(err => {
+    console.log("DB connection Error", err.message);
+  });
+
+const io = require('socket.io')(server);
+
+io.on('connection', client => {
+  console.log('connected');
+  client.on('question', data => {
+    console.log(data);
+    client.broadcast.emit('answer', data);
+  });
+  client.on('disconnect', () => { console.log('disconnected') });
+});
+
+/**
+ * Normalize a port into a number, string, or false.
+ */
+
+function normalizePort(val) {
+  var port = parseInt(val, 10);
+
+  if (isNaN(port)) {
+    // named pipe
+    return val;
+  }
+
+  if (port >= 0) {
+    // port number
+    return port;
+  }
+
+  return false;
+}
+
+/**
+ * Event listener for HTTP server "error" event.
+ */
+
+function onError(error) {
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
+
+  var bind = typeof port === 'string'
+    ? 'Pipe ' + port
+    : 'Port ' + port;
+
+  // handle specific listen errors with friendly messages
+  switch (error.code) {
+    case 'EACCES':
+      console.error(bind + ' requires elevated privileges');
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      console.error(bind + ' is already in use');
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
+}
+
+/**
+ * Event listener for HTTP server "listening" event.
+ */
+
+function onListening() {
+  var addr = server.address();
+  var bind = typeof addr === 'string'
+    ? 'pipe ' + addr
+    : 'port ' + addr.port;
+  debug('Listening on ' + bind);
+}

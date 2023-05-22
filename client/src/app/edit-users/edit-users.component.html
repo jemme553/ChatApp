@@ -1,0 +1,186 @@
+<section class=" h-custom gradient-custom-2">
+    <div class="container py-5 h-100">
+        <div class="row d-flex justify-content-center align-items-center h-100">
+            <div class="col-12">
+                <div class="card card-registration card-registration-2" style="border-radius: 15px;">
+                    <div class="card-body p-0">
+                        <div class="row g-0">
+                            <form [formGroup]="editForm" class="d-flex">
+                                <div class="col-lg-6">
+                                    <button class="btn" (click)="goProfile()"
+                                        style="background-color: #4835d4; color: white;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30"
+                                            class="bi bi-backspace primary" viewBox="0 0 16 16">
+                                            <path
+                                                d="M5.83 5.146a.5.5 0 0 0 0 .708L7.975 8l-2.147 2.146a.5.5 0 0 0 .707.708l2.147-2.147 2.146 2.147a.5.5 0 0 0 .707-.708L9.39 8l2.146-2.146a.5.5 0 0 0-.707-.708L8.683 7.293 6.536 5.146a.5.5 0 0 0-.707 0z" />
+                                            <path
+                                                d="M13.683 1a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-7.08a2 2 0 0 1-1.519-.698L.241 8.65a1 1 0 0 1 0-1.302L5.084 1.7A2 2 0 0 1 6.603 1h7.08zm-7.08 1a1 1 0 0 0-.76.35L1 8l4.844 5.65a1 1 0 0 0 .759.35h7.08a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1h-7.08z" />
+                                        </svg>
+                                        Back to profile
+                                    </button>
+
+                                    <div class="p-5">
+
+                                        <h3 class="fw-normal mb-5" style="color: #4835d4;">Personal Infomation</h3>
+                                        <div class="row">
+                                            <div class="col-md-6 mb-4 pb-2">
+
+                                                <div class="form-outline">
+                                                    <input type="text" id="form3Examplev2"
+                                                        class="form-control form-control-lg" placeholder="{{user.name}}"
+                                                        formControlName="fname" />
+                                                    <label class="form-label" for="form3Examplev2">First name</label>
+                                                </div>
+
+                                            </div>
+                                            <div class="col-md-6 mb-4 pb-2">
+
+                                                <div class="form-outline">
+                                                    <input type="text" id="form3Examplev3"
+                                                        class="form-control form-control-lg"
+                                                        placeholder="{{user.lname}}" formControlName="lname" />
+                                                    <label class="form-label" for="form3Examplev3">Last name</label>
+                                                </div>
+
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-4 pb-2">
+                                            <div class="form-outline">
+                                                <input type="text" id="form3Examplev4"
+                                                    class="form-control form-control-lg" placeholder="{{user.email}}"
+                                                    formControlName="email" />
+                                                <label class="form-label" for="form3Examplev4">Email</label>
+                                            </div>
+                                        </div>
+                                        <div class="row" *ngIf="isAdmin">
+                                            <div class="col-md-6 mb-4 pb-2">
+
+                                                <div class="form-outline">
+                                                    <input type="text" id="form3Examplev5"
+                                                        class="form-control form-control-lg"
+                                                        placeholder="{{user.phone}}" formControlName="phone" />
+                                                    <label class="form-label" for="form3Examplev5">Phone</label>
+                                                </div>
+
+                                            </div>
+                                            <div class="col-md-6 mb-4 pb-2">
+
+                                                <div class="form-outline">
+                                                    <input type="text" id="form3Examplev3"
+                                                        class="form-control form-control-lg" placeholder="{{user.role}}"
+                                                        formControlName="role" />
+                                                    <label class="form-label" for="form3Examplev3">Role</label>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                        <div class="mb-4 pb-2" *ngIf="!isAdmin">
+                                            <div class="form-outline">
+                                                <input type="text" id="form3Examplev5"
+                                                    class="form-control form-control-lg" placeholder="{{user.phone}}"
+                                                    formControlName="phone" />
+                                                <label class="form-label" for="form3Examplev5">Phone</label>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-4 pb-2">
+                                            <div class="form-outline">
+                                                <input type="file" id="form3Examplev4"
+                                                    class="form-control form-control-lg"
+                                                    (change)="fileProgress($event)" />
+                                                <label class="form-label" for="form3Examplev4">Choose picture</label>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex flex-row align-items-center mb-4">
+                                            <i class="fas fa-key fa-lg me-3 fa-fw"></i>
+                                            <img [src]="previewUrl" class="editPhoto" alt="Personal photo">
+                                          </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 bg-indigo text-white">
+                                    <div class="p-5">
+                                        <h3 class="fw-normal mb-5">Contact Details</h3>
+
+                                        <div class="row">
+                                            <div class="col-md-6 mb-4 pb-2">
+                                                <div class="form-outline">
+                                                    <input type="text" id="form3Examplev5"
+                                                        class="form-control form-control-lg"
+                                                        placeholder="{{user.country}}" formControlName="country" />
+                                                    <label class="form-label" for="form3Examplev5">Country</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6 mb-4 pb-2">
+                                                <div class="form-outline">
+                                                    <input type="text" id="form3Examplev5"
+                                                        class="form-control form-control-lg" placeholder="{{user.city}}"
+                                                        formControlName="city" />
+                                                    <label class="form-label" for="form3Examplev5">City</label>
+                                                </div>
+
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-5 mb-4 pb-2">
+
+                                                <div class="form-outline form-white">
+                                                    <input type="text" id="form3Examplea4"
+                                                        class="form-control form-control-lg"
+                                                        placeholder="{{user.street}}" formControlName="street" />
+                                                    <label class="form-label" for="form3Examplea4">Street+Num</label>
+                                                </div>
+
+                                            </div>
+                                            <div class="col-md-7 mb-4 pb-2">
+
+                                                <div class="form-outline form-white">
+                                                    <input type="text" id="form3Examplea5"
+                                                        class="form-control form-control-lg" placeholder="{{user.zip}}"
+                                                        formControlName="zip" />
+                                                    <label class="form-label" for="form3Examplea5">Zip Code</label>
+                                                </div>
+
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-5 mb-4 pb-2">
+
+                                                <div class="form-outline form-white">
+                                                    <input type="date" id="form3Examplea4"
+                                                        class="form-control form-control-lg" placeholder="{{user.age}}"
+                                                        formControlName="age" />
+                                                    <label class="form-label" for="form3Examplea4">Pick Birthdate:</label>
+                                                    <br>
+                                                    <label class="form-label" for="form3Examplea4">Your Age: {{age}}</label>
+
+                                                </div>
+
+                                            </div>
+                                        </div>
+
+
+                                        <div class="mb-4 pb-2">
+                                            <div class="form-outline form-white">
+                                                <textarea class="form-control" name="" id="" cols="30" rows="10"
+                                                    placeholder="{{user.about}}" formControlName="about"></textarea>
+                                                <label class="form-label" for="form3Examplea6">About you</label>
+                                            </div>
+                                        </div>
+
+                                        <button type="button" class="btn btn-light btn-lg" data-mdb-ripple-color="dark"
+                                            (click)="updateUser(user)">Update</button>
+
+                                    </div>
+                                </div>
+                            </form>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
